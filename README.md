@@ -70,25 +70,25 @@ The system currently monitors several security indicators.
 445
 These ports are treated as potentially risky and are monitored during traffic analysis.
 
-**Large Packets**
+##large packets
 Packets larger than:
 1500 bytes
 are flagged for further inspection.
-**Unknown Protocols**
+##Unknown protocols
 Traffic that does not match:
 TCP
 UDP
 ICMP
 is treated as an unknown protocol event.
 
-***📊 Risk Scoring***
+##📊 Risk Scoring
 The AI security module calculates a risk score from:
 ML anomaly rate
 High-risk port events
 Large packet events
 Unknown protocol events
 
-***Risk Levels***
+##Risk Levels
 Risk Score
 Risk Level
 0–34
@@ -99,7 +99,7 @@ Risk Level
 🔴 HIGH
 The score is limited to a maximum of 100.
 
-**🖥 Dashboard**
+#🖥 Dashboard
 The web dashboard provides:
 Total packets
 TCP packets
@@ -117,7 +117,7 @@ Anomaly percentage
 AI analysis
 Security recommendations
 
-**📄 Security Report**
+#📄 Security Report
 The application can automatically generate a PDF security report.
 The report contains:
 Total packets
@@ -131,7 +131,7 @@ High-risk port events
 Total traffic
 Suspicious traffic details
 Severity information
-**🛠 Technologies Used**
+#🛠 Technologies Used
 Technology
 Purpose
 Python
@@ -157,7 +157,7 @@ Live dashboard updates
 Chart.js
 Traffic visualization
 
-**📁 Project Structure**
+#📁 Project Structure
 
 AI-Network-Traffic-Security-Analyzer/
 │
@@ -171,30 +171,30 @@ AI-Network-Traffic-Security-Analyzer/
 └── templates/
     └── index.html
 
-**⚙️ Installation**
-**1. Clone the repository**
+#⚙️ Installation
+##1. Clone the repository
 git clone https://github.com/YOUR-USERNAME/AI-Network-Traffic-Security-Analyzer.git
-**2. Open the project**
+##2. Open the project
 cd AI-Network-Traffic-Security-Analyzer
-**3. Create a virtual environment**
+##3. Create a virtual environment
 python -m venv .venv
-**4. Activate the virtual environment
-Windows**
+##4. Activate the virtual environment
+Windows
 .venv\Scripts\activate
-**5. Install dependencies**
+##5. Install dependencies
 pip install -r requirements.txt
-**▶️ Running the Application**
+#▶️ Running the Application
 Start the Flask application:
 python app.py
 Then open the local address shown by Flask in your browser.
-**🔴 Network Capture**
+#🔴 Network Capture
 Click:
 ▶ Start Capture
 to begin monitoring network traffic.
 To stop monitoring:
 ■ Stop Capture
 The dashboard automatically updates live traffic information.
-**🤖 AI Analysis Workflow**
+#🤖 AI Analysis Workflow
 Network Traffic
        ↓
 Packet Capture
@@ -217,12 +217,12 @@ AI Security Analysis
        ↓
 Security Recommendation
 
-**📌 Important Notes**
+##📌 Important Notes
 This project is intended for educational, research, and authorized network monitoring purposes.
 Only capture and analyze network traffic on systems or networks where you have permission to do so.
 The AI anomaly detector is an analysis and monitoring component and should not be treated as a replacement for a professional IDS/IPS or SOC system.
 
-**🎯 Project Goals**
+##🎯 Project Goals
 The main goals of this project are:
 Monitor network traffic in real time.
 Detect potentially suspicious network activity.
@@ -231,7 +231,7 @@ Combine AI detection with security rules.
 Calculate an understandable security risk score.
 Provide security recommendations.
 Generate an automated security report.
-**🔮 Future Improvements**
+##🔮 Future Improvements
 Possible future enhancements include:
 Deep Learning-based anomaly detection
 Real-time attack classification
