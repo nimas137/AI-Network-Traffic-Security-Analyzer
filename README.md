@@ -81,14 +81,14 @@ UDP
 ICMP
 is treated as an unknown protocol event.
 
-**📊 Risk Scoring**
+***📊 Risk Scoring***
 The AI security module calculates a risk score from:
 ML anomaly rate
 High-risk port events
 Large packet events
 Unknown protocol events
 
-**Risk Levels**
+***Risk Levels***
 Risk Score
 Risk Level
 0–34
