@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Network Traffic Analyzer</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 18px;
+            background: #030712;
+            color: #dbeafe;
+            font-family: Arial, sans-serif;
+        }
+
+        .dashboard {
+            max-width: 1500px;
+            margin: auto;
+        }
+
+        /* HEADER */
+
+        .header {
+            border: 1px solid #164e63;
+            background: #07111f;
+            padding: 18px 22px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #22d3ee;
+            font-size: 25px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status {
+            padding: 9px 14px;
+            border: 1px solid #166534;
+            background: #052e16;
+            color: #4ade80;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* BUTTONS */
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 9px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .start {
+            background: #15803d;
+        }
+
+        .stop {
+            background: #b91c1c;
+        }
+
+        /* STATISTICS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat {
+            background: #07111f;
+            border: 1px solid #164e63;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .stat-title {
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #67e8f9;
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        /* MAIN GRID */
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .panel {
+            background: #07111f;
+            border: 1px solid #164e63;
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .panel-title {
+            color: #22d3ee;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 8px;
+        }
+
+        /* PACKET TABLE */
+
+        .packet-container {
+            height: 420px;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background: #0f1d2e;
+            color: #67e8f9;
+            padding: 9px;
+            text-align: left;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #172033;
+            color: #cbd5e1;
+        }
+
+        tr:hover {
+            background: #0f1d2e;
+        }
+
+        /* TELEMETRY */
+
+        .telemetry-item {
+            background: #0b1728;
+            border-left: 3px solid #0891b2;
+            padding: 12px;
+            margin-bottom: 9px;
+            border-radius: 4px;
+        }
+
+        .telemetry-label {
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .telemetry-value {
+            color: #a5f3fc;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        /* LOWER GRID */
+
+        .lower-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        /* IP TABLE */
+
+        .mini-table {
+            width: 100%;
+        }
+
+        .mini-table th,
+        .mini-table td {
+            padding: 8px;
+        }
+
+        /* SEARCH */
+
+        .search {
+            margin-bottom: 10px;
+        }
+
+        .search input {
+            width: 100%;
+            padding: 10px;
+            background: #030712;
+            border: 1px solid #164e63;
+            border-radius: 5px;
+            color: white;
+            outline: none;
+        }
+
+        /* ALERTS */
+
+        .alert {
+            padding: 10px;
+            background: #111827;
+            border-left: 3px solid #22c55e;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .alert.warning {
+            border-left-color: #f59e0b;
+        }
+
+        /* CHART */
+
+        .chart-box {
+            height: 260px;
+        }
+
+        /* FOOTER */
+
+        .footer {
+            text-align: center;
+            color: #475569;
+            font-size: 11px;
+            padding: 12px;
+        }
+
+        /* MOBILE */
+
+        @media(max-width: 1000px) {
+
+            .stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .main-grid,
+            .lower-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media(max-width: 600px) {
+
+            body {
+                padding: 8px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+        .suspicious-panel {
+    border-color: #7f1d1d;
+}
+
+.suspicious-count {
+    background: #1f1111;
+    border-left: 3px solid #ef4444;
+    padding: 12px;
+    margin-bottom: 10px;
+    color: #fca5a5;
+}
+
+.suspicious-count strong {
+    color: #ef4444;
+    font-size: 20px;
+}
+
+.suspicious-item {
+    background: #1a1010;
+    border-left: 3px solid #ef4444;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.suspicious-item strong {
+    color: #f87171;
+}
+
+.no-alert {
+    background: #052e16;
+    border-left: 3px solid #22c55e;
+    padding: 12px;
+    color: #4ade80;
+    font-size: 12px;
+}.suspicious-panel {
+    border-color: #7f1d1d;
+}
+
+.suspicious-count {
+    background: #1f1111;
+    border-left: 3px solid #ef4444;
+    padding: 12px;
+    margin-bottom: 10px;
+    color: #fca5a5;
+}
+
+.suspicious-count strong {
+    color: #ef4444;
+    font-size: 20px;
+}
+
+.suspicious-item {
+    background: #1a1010;
+    border-left: 3px solid #ef4444;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.suspicious-item strong {
+    color: #f87171;
+}
+
+.no-alert {
+    background: #052e16;
+    border-left: 3px solid #22c55e;
+    padding: 12px;
+    color: #4ade80;
+    font-size: 12px;
+}
+
+.controls a {
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.start-btn {
+    background: #16a34a !important;
+    color: white !important;
+}
+
+.stop-btn {
+    background: #dc2626 !important;
+    color: white !important;
+}
+
+.test-btn {
+    display: inline-block;
+    background: #7c3aed !important;
+    color: white !important;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.test-area {
+    margin-bottom: 25px;
+}
+.report-btn {
+    display: inline-block;
+    padding: 12px 20px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    margin: 10px;
+}
+
+.report-btn:hover {
+    background: #1d4ed8;
+}
+/* =========================
+   AI SECURITY ANALYSIS
+========================= */
+
+/* =========================
+   PROFESSIONAL AI SECURITY PANEL
+========================= */
+
+.ai-panel {
+    border: 1px solid #164e63;
+    background: #07111f;
+}
+
+.ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.ai-live {
+    font-size: 10px;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #052e16;
+    color: #4ade80;
+    border: 1px solid #166534;
+}
+
+.ai-risk-card {
+    background: #0b1728;
+    border: 1px solid #1e293b;
+    border-left: 4px solid #22c55e;
+    padding: 15px;
+    border-radius: 7px;
+    margin-bottom: 12px;
+}
+
+.ai-risk-card.medium {
+    border-left-color: #f59e0b;
+}
+
+.ai-risk-card.high {
+    border-left-color: #ef4444;
+}
+
+.ai-risk-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ai-label {
+    color: #64748b;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.ai-risk-value {
+    color: #4ade80;
+    font-size: 27px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.ai-risk-card.medium .ai-risk-value {
+    color: #fbbf24;
+}
+
+.ai-risk-card.high .ai-risk-value {
+    color: #f87171;
+}
+
+.ai-score {
+    color: #67e8f9;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.ai-progress-container {
+    margin-top: 12px;
+}
+
+.ai-progress-bg {
+    width: 100%;
+    height: 7px;
+    background: #172033;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ai-progress {
+    width: 0%;
+    height: 100%;
+    background: #22c55e;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.ai-risk-card.medium .ai-progress {
+    background: #f59e0b;
+}
+
+.ai-risk-card.high .ai-progress {
+    background: #ef4444;
+}
+
+.ai-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.ai-metric {
+    background: #0b1728;
+    border: 1px solid #1e293b;
+    padding: 13px;
+    border-radius: 6px;
+}
+
+.ai-metric-value {
+    color: #67e8f9;
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.ai-analysis-box {
+    background: #0b1728;
+    border: 1px solid #1e293b;
+    padding: 13px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.ai-analysis-title {
+    color: #22d3ee;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.ai-analysis-text {
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.ai-recommendation-box {
+    background: #071f2b;
+    border-left: 3px solid #22d3ee;
+    padding: 13px;
+    border-radius: 5px;
+}
+
+.ai-recommendation-title {
+    color: #67e8f9;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.ai-recommendation-text {
+    color: #a5f3fc;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="dashboard">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <div>
+
+            <h1>🛡 NETWORK TRAFFIC ANALYZER</h1>
+
+            <p>
+                Real-Time Network Monitoring & Traffic Analysis
+            </p>
+
+        </div>
+
+        <div class="header-right">
+
+            <span class="status">
+
+                ●
+                <span id="headercaptureStatus">
+                    {{ capture_status }}
+                </span>
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- CONTROLS -->
+<div class="controls">
+
+    <a href="/start" class="start-btn">
+        ▶ Start Capture
+    </a>
+
+    <a href="/stop" class="stop-btn">
+        ■ Stop Capture
+    </a>
+    <a href="{{ url_for('generate_report') }}" class="report-btn">
+    📄 Generate Security Report
+</a>
+
+    <span class="status">
+        Status:
+        <strong id="captureStatus">
+            {{ capture_status }}
+        </strong>
+    </span>
+
+</div>
+
+    
+    </div>
+
+
+    <!-- STATISTICS -->
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <div class="stat-title">
+                TOTAL PACKETS
+            </div>
+
+            <div class="stat-value" id="totalPackets">
+                {{ total_packets }}
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-title">
+                TCP
+            </div>
+
+            <div class="stat-value" id="tcpCount">
+                {{ tcp_count }}
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-title">
+                UDP
+            </div>
+
+            <div class="stat-value" id="udpCount">
+                {{ udp_count }}
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-title">
+                ICMP
+            </div>
+
+            <div class="stat-value" id="icmpCount">
+                {{ icmp_count }}
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-title">
+                TOTAL DATA
+            </div>
+
+            <div class="stat-value" id="totalBytes">
+                {{ total_bytes }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- MAIN SECTION -->
+
+    <div class="main-grid">
+
+
+        <!-- LIVE PACKETS -->
+
+        <div class="panel">
+
+            <div class="panel-title">
+                LIVE PACKET STREAM
+            </div>
+
+            <div class="search">
+
+                <input
+                    type="text"
+                    id="packetSearch"
+                    placeholder="Search IP or Protocol..."
+                    onkeyup="filterPackets()"
+                >
+
+            </div>
+
+
+            <div class="packet-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Source IP</th>
+
+                            <th>Destination IP</th>
+
+                            <th>Protocol</th>
+
+                            <th>Source Port</th>
+
+                            <th>Destination Port</th>
+
+                            <th>Size</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="packetBody">
+
+                        {% for packet in packets %}
+
+                        <tr>
+
+                            <td>{{ packet[0] }}</td>
+
+                            <td>{{ packet[1] }}</td>
+
+                            <td>{{ packet[2] }}</td>
+
+                            <td>{{ packet[3] }}</td>
+
+                            <td>{{ packet[4] }}</td>
+
+                            <td>{{ packet[5] }}</td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- TELEMETRY -->
+
+        <div class="panel">
+
+            <div class="panel-title">
+                TELEMETRY & WATCHLIST
+            </div>
+
+
+            <div class="telemetry-item">
+
+                <div class="telemetry-label">
+                    PACKETS CAPTURED
+                </div>
+
+                <div class="telemetry-value" id="telemetryPackets">
+                    {{ total_packets }}
+                </div>
+
+            </div>
+
+
+            <div class="telemetry-item">
+
+                <div class="telemetry-label">
+                    TCP TRAFFIC
+                </div>
+
+                <div class="telemetry-value" id="telemetryTCP">
+                    {{ tcp_count }}
+                </div>
+
+            </div>
+
+
+            <div class="telemetry-item">
+
+                <div class="telemetry-label">
+                    UDP TRAFFIC
+                </div>
+
+                <div class="telemetry-value" id="telemetryUDP">
+                    {{ udp_count }}
+                </div>
+
+            </div>
+
+
+            <div class="telemetry-item">
+
+                <div class="telemetry-label">
+                    ICMP TRAFFIC
+                </div>
+
+                <div class="telemetry-value" id="telemetryICMP">
+                    {{ icmp_count }}
+                </div>
+
+            </div>
+
+
+            <div class="panel-title">
+                SECURITY STATUS
+            </div>
+
+
+            <div class="alert">
+                ✓ Network monitoring active
+            </div>
+
+
+            <div class="alert">
+                ✓ Packet inspection running
+            </div>
+
+
+            <div class="alert warning">
+                ⚠ Security detection module ready
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- LOWER SECTION -->
+
+    <div class="lower-grid">
+        <div class="panel suspicious-panel">
+
+    <div class="panel-title">
+        🚨 SUSPICIOUS TRAFFIC
+    </div>
+
+    <div class="suspicious-count">
+        Suspicious Packets:
+        <strong id="suspiciousCount">0</strong>
+    </div>
+
+    <div id="suspiciousList">
+
+        <div class="no-alert">
+            ✓ No suspicious traffic detected
+        </div>
+
+    </div>
+
+
+
+</div>
+
+<!-- AI SECURITY ANALYSIS -->
+
+<!-- AI SECURITY ANALYSIS -->
+
+<div class="panel ai-panel">
+
+    <div class="ai-header">
+
+        <div class="panel-title" style="margin-bottom:0;">
+            🤖 AI SECURITY INTELLIGENCE
+        </div>
+
+        <div class="ai-live">
+            ● AI LIVE
+        </div>
+
+    </div>
+
+
+    <!-- RISK LEVEL -->
+
+    <div class="ai-risk-card" id="aiRiskCard">
+
+        <div class="ai-risk-top">
+
+            <div>
+
+                <div class="ai-label">
+                    CURRENT RISK LEVEL
+                </div>
+
+                <div
+                    class="ai-risk-value"
+                    id="aiRisk"
+                >
+                    LOW
+                </div>
+
+            </div>
+
+            <div>
+
+                <div class="ai-label">
+                    AI RISK SCORE
+                </div>
+
+                <div
+                    class="ai-score"
+                    id="aiRiskScore"
+                >
+                    0 / 100
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="ai-progress-container">
+
+            <div class="ai-progress-bg">
+
+                <div
+                    class="ai-progress"
+                    id="aiProgress"
+                ></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- AI METRICS -->
+
+    <div class="ai-metrics">
+
+        <div class="ai-metric">
+
+            <div class="ai-label">
+                AI ANOMALIES
+            </div>
+
+            <div
+                class="ai-metric-value"
+                id="aiAnomalies"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="ai-metric">
+
+            <div class="ai-label">
+                ANOMALY RATE
+            </div>
+
+            <div
+                class="ai-metric-value"
+                id="aiPercentage"
+            >
+                0%
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- AI ANALYSIS -->
+
+    <div class="ai-analysis-box">
+
+        <div class="ai-analysis-title">
+            🧠 AI ANALYSIS
+        </div>
+
+        <div
+            class="ai-analysis-text"
+            id="aiMessage"
+        >
+            Waiting for network traffic...
+        </div>
+
+    </div>
+
+
+    <!-- RECOMMENDATION -->
+
+    <div class="ai-recommendation-box">
+
+        <div class="ai-recommendation-title">
+            💡 SECURITY RECOMMENDATION
+        </div>
+
+        <div
+            class="ai-recommendation-text"
+            id="aiRecommendation"
+        >
+            Start network capture to begin AI analysis.
+        </div>
+
+    </div>
+
+</div>
+
+        <!-- TOP IPs -->
+
+        <div class="panel">
+
+            <div class="panel-title">
+                TOP NETWORK GENERATORS
+            </div>
+
+            <table class="mini-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Source IP</th>
+
+                        <th>Packets</th>
+
+                        <th>Data</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="topIPs">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- GRAPH -->
+
+        <div class="panel">
+
+            <div class="panel-title">
+                PROTOCOL TRAFFIC
+            </div>
+
+            <div class="chart-box">
+
+                <canvas id="protocolChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+        Network Traffic Analyzer • Real-Time Monitoring Dashboard
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+
+/* =========================
+   PROTOCOL CHART
+========================= */
+
+const ctx =
+    document
+    .getElementById("protocolChart");
+
+
+const protocolChart =
+    new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+
+            labels: [
+                "TCP",
+                "UDP",
+                "ICMP"
+            ],
+
+            datasets: [{
+
+                label: "Packets",
+                data: [0, 0, 0]
+
+    
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            scales: {
+
+                y: {
+                    beginAtZero: true
+                }
+
+            }
+
+        }
+
+    });
+
+
+
+/* =========================
+   UPDATE DASHBOARD
+========================= */
+
+function updateDashboard() {
+
+    fetch("/live_data")
+
+        .then(response => response.json())
+
+        .then(data => {
+/* =========================
+   AI SECURITY ANALYSIS
+========================= */
+
+if (data.ai_analysis) {
+
+    const ai = data.ai_analysis;
+
+    const risk =
+        ai.risk_level || "LOW";
+
+    const anomalies =
+        ai.anomalies || 0;
+
+    const percentage =
+        ai.anomaly_percentage || 0;
+
+    const riskScore =
+        ai.risk_score || 0;
+
+
+    /* RISK LEVEL */
+
+    document
+        .getElementById("aiRisk")
+        .textContent = risk;
+
+
+    /* ANOMALIES */
+
+    document
+        .getElementById("aiAnomalies")
+        .textContent = anomalies;
+
+
+    /* ANOMALY PERCENTAGE */
+
+    document
+        .getElementById("aiPercentage")
+        .textContent =
+            percentage + "%";
+
+
+    /* RISK SCORE */
+
+    document
+        .getElementById("aiRiskScore")
+        .textContent =
+            riskScore + " / 100";
+
+
+    /* PROGRESS BAR */
+
+    document
+        .getElementById("aiProgress")
+        .style.width =
+            riskScore + "%";
+
+
+    /* AI MESSAGE */
+
+    document
+        .getElementById("aiMessage")
+        .textContent =
+            ai.message;
+
+
+    /* RECOMMENDATION */
+
+    document
+        .getElementById("aiRecommendation")
+        .textContent =
+            ai.recommendation;
+
+
+    /* RISK COLOR */
+
+    const riskCard =
+        document.getElementById(
+            "aiRiskCard"
+        );
+
+    riskCard.classList.remove(
+        "medium",
+        "high"
+    );
+
+
+    if (risk === "MEDIUM") {
+
+        riskCard.classList.add(
+            "medium"
+        );
+
+    }
+
+    else if (risk === "HIGH") {
+
+        riskCard.classList.add(
+            "high"
+        );
+
+    }
+
+}
+/* TOP STATISTICS CARDS */
+
+document
+    .getElementById("totalPackets")
+    .textContent =
+        data.total_packets;
+
+document
+    .getElementById("tcpCount")
+    .textContent =
+        data.tcp_count;
+
+document
+    .getElementById("udpCount")
+    .textContent =
+        data.udp_count;
+
+document
+    .getElementById("icmpCount")
+    .textContent =
+        data.icmp_count;
+
+document
+    .getElementById("totalBytes")
+    .textContent =
+        data.total_bytes;
+
+
+
+            /* TELEMETRY */
+
+            document
+            .getElementById("telemetryPackets")
+            .textContent =
+                data.total_packets;
+
+
+            document
+            .getElementById("telemetryTCP")
+            .textContent =
+                data.tcp_count;
+
+
+            document
+            .getElementById("telemetryUDP")
+            .textContent =
+                data.udp_count;
+
+
+            document
+            .getElementById("telemetryICMP")
+            .textContent =
+                data.icmp_count;
+
+
+
+            /* CHART */
+
+            protocolChart
+            .data
+            .datasets[0]
+            .data = [
+
+                data.tcp_count,
+
+                data.udp_count,
+
+                data.icmp_count
+
+            ];
+
+            protocolChart.update();
+            const suspiciousCount =
+    document.getElementById("suspiciousCount");
+
+suspiciousCount.textContent =
+    data.suspicious_count;
+
+
+const suspiciousList =
+    document.getElementById("suspiciousList");
+
+suspiciousList.innerHTML = "";
+
+
+if (data.suspicious_packets.length === 0) {
+
+    suspiciousList.innerHTML = `
+        <div class="no-alert">
+            ✓ No suspicious traffic detected
+        </div>
+    `;
+
+} else {
+
+    data.suspicious_packets
+        .slice(-10)
+        .reverse()
+        .forEach(packet => {
+
+            const item =
+                document.createElement("div");
+
+            item.className =
+                "suspicious-item";
+
+            item.innerHTML = `
+                <strong>⚠ ${packet.reason}</strong><br>
+                ${packet.source}
+                →
+                ${packet.destination}<br>
+                Protocol: ${packet.protocol}
+                |
+                Port:
+                ${packet.destination_port}<br>
+                Size: ${packet.size} bytes
+            `;
+
+            suspiciousList.appendChild(item);
+
+        });
+
+}
+
+
+
+            /* PACKET TABLE */
+
+            const tbody =
+                document
+                .getElementById("packetBody");
+
+
+            tbody.innerHTML = "";
+
+
+            data.packets.forEach(packet => {
+
+
+                const row =
+                    document
+                    .createElement("tr");
+
+
+                row.innerHTML = `
+
+                    <td>${packet[0]}</td>
+
+                    <td>${packet[1]}</td>
+
+                    <td>${packet[2]}</td>
+
+                    <td>${packet[3]}</td>
+
+                    <td>${packet[4]}</td>
+
+                    <td>${packet[5]}</td>
+
+                `;
+
+
+                tbody.appendChild(row);
+
+            });
+
+
+
+            /* TOP SOURCE IPS */
+
+            updateTopIPs(data.packets);
+
+
+            filterPackets();
+
+        })
+
+        .catch(error => {
+
+            console.log(
+                "Live update error:",
+                error
+            );
+
+        });
+
+}
+
+
+
+/* =========================
+   TOP SOURCE IPs
+========================= */
+
+function updateTopIPs(packets) {
+
+    const ipData = {};
+
+
+    packets.forEach(packet => {
+
+        const ip = packet[0];
+
+        const size =
+            Number(packet[5]) || 0;
+
+
+        if (!ipData[ip]) {
+
+            ipData[ip] = {
+                packets: 0,
+                bytes: 0
+            };
+
+        }
+
+
+        ipData[ip].packets++;
+
+        ipData[ip].bytes += size;
+
+    });
+
+
+    const sorted =
+        Object.entries(ipData)
+
+        .sort(
+            (a, b) =>
+                b[1].packets -
+                a[1].packets
+        )
+
+        .slice(0, 8);
+
+
+    const tbody =
+        document
+        .getElementById("topIPs");
+
+
+    tbody.innerHTML = "";
+
+
+    sorted.forEach(item => {
+
+        const row =
+            document
+            .createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>${item[0]}</td>
+
+            <td>${item[1].packets}</td>
+
+            <td>${item[1].bytes} B</td>
+
+        `;
+
+
+        tbody.appendChild(row);
+
+    });
+
+}
+
+
+
+/* =========================
+   SEARCH
+========================= */
+
+function filterPackets() {
+
+    const search =
+        document
+        .getElementById("packetSearch")
+        .value
+        .toUpperCase();
+
+
+    const rows =
+        document
+        .getElementById("packetBody")
+        .getElementsByTagName("tr");
+
+
+    for (
+        let i = 0;
+        i < rows.length;
+        i++
+    ) {
+
+        const text =
+            rows[i]
+            .textContent
+            .toUpperCase();
+
+
+        if (
+            text.includes(search)
+        ) {
+
+            rows[i]
+            .style
+            .display = "";
+
+        }
+
+        else {
+
+            rows[i]
+            .style
+            .display = "none";
+
+        }
+
+    }
+
+}
+
+
+/* =========================
+   AUTO UPDATE
+========================= */
+
+setInterval(
+    updateDashboard,
+    2000
+);
+updateDashboard();
+
+
+</script>
+
+</body>
+
+</html>
