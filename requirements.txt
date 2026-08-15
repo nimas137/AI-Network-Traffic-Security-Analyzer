@@ -1,0 +1,5 @@
+Flask
+scapy
+numpy
+scikit-learn
+reportlab
